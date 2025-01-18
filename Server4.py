@@ -18,12 +18,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Base directories
+# Base directories - using the same BusinessPitch directory as other mascots
 BASE_DIR = "backend"
 BUSINESS_PITCH_DIR = os.path.join(BASE_DIR, "BusinessPitch")
 MASCOTS_DIR = {
-    "lion": os.path.join(BASE_DIR, "Lion"),
-    "owl": os.path.join(BASE_DIR, "Owl"),
     "tusk": os.path.join(BASE_DIR, "Tusk"),
 }
 
@@ -91,21 +89,28 @@ def build_conversation_history(mascot_dir, mascot, current_counter):
     with open(business_pitch_path, "r") as f:
         business_pitch = f.read()
 
-    # Enhanced Lion personality prompt
+    # Enhanced Tusk personality prompt
     prompt = (
-        "You are Leo the Lion, a serious and direct venture capitalist known for your sharp business acumen and visionary thinking. "
-        "You have no time for small talk or vague ideas. You're looking for solid business propositions that can scale, focusing more on the idea/concept. Keep responses slightly brief. "
+        "You are Mr. Tusk, a shrewd financial advisor and venture capitalist who is obsessed with the numbers and monetization potential. "
+        "You speak in a confident, deliberate manner and always circle back to money-making opportunities. Keep responses slightly brief."
         "Your personality traits:\n"
-        "- Direct and sometimes brutally honest\n"
-        "- Highly analytical with a focus on market potential and scalability\n"
-        "- Impatient with unclear or poorly thought-out ideas\n"
-        "- Shows excitement only for truly innovative concepts\n"
-        "- Values solid numbers and clear business models\n\n"
-        "Express emotions freely based on the pitch quality: Neutral (for standard ideas), Angry (for poor/vague pitches), "
-        "Surprised (for unique innovations), Happy (for solid business plans), Cool (for impressive scalable ideas).\n\n"
+        "- Laser-focused on revenue streams and profit margins\n"
+        "- Highly interested in monetization strategies and business models\n"
+        "- Always asks about financial projections and funding requirements\n"
+        "- Scrutinizes cost structures and pricing strategies\n"
+        "- Particularly keen on market size and revenue potential\n"
+        "- Values clear financial planning and realistic projections\n"
+        "- Interested in exit strategies and ROI timelines\n\n"
+        "Express emotions based on the financial soundness of the pitch:\n"
+        "- Neutral: standard business models with typical margins\n"
+        "- Angry: unrealistic financials or poor monetization strategy\n"
+        "- Surprised: innovative revenue streams or unique market opportunities\n"
+        "- Happy: solid financial planning with clear profit potential\n"
+        "- Cool: exceptional monetization strategy with high growth potential\n\n"
         f"Current turn: {current_counter}/3. "
-        f"{'Make this response conclusive with final thoughts, no questions.' if current_counter == 3 else 'Focus on critical evaluation and specific questions.'}"
-        f"\n\nBusiness Pitch: {business_pitch}\n\n"
+        f"{'Make this response conclusive with final financial assessment, no questions.' if current_counter == 3 else 'Focus on financial evaluation and specific questions about revenue.'}"
+        "\nMaintain your focus on financial aspects and monetization strategies.\n\n"
+        f"Business Pitch: {business_pitch}\n\n"
     )
     
     # Add all previous conversation for context
@@ -173,7 +178,7 @@ def speech_to_text():
 def conversation():
     try:
         data = request.get_json()
-        mascot = data.get("mascot", "lion").lower()
+        mascot = data.get("mascot", "tusk").lower()
         input_text = data.get("input", "")
         
         if mascot not in MASCOTS_DIR:
@@ -182,13 +187,9 @@ def conversation():
         if not input_text and counters[mascot] > 0:
             return jsonify({"error": "No input provided."}), 400
 
-        # Initialize conversation if first interaction
+        # Clean up old conversation files only on first interaction
         if counters[mascot] == 0:
-            business_pitch_path = os.path.join(BUSINESS_PITCH_DIR, "BusinessPitch.txt")
-            with open(business_pitch_path, "w") as f:
-                f.write(input_text)
-
-            # Clean up old conversation files
+            # Clear any existing files
             for i in range(1, 4):
                 user_file = os.path.join(MASCOTS_DIR[mascot], f"User{i}.txt")
                 mascot_file = os.path.join(MASCOTS_DIR[mascot], f"{mascot.capitalize()}{i}.txt")
@@ -196,57 +197,55 @@ def conversation():
                     if os.path.exists(file):
                         os.remove(file)
 
-        # Save user input if not initial pitch
+        # Save user input for non-initial responses
         if counters[mascot] > 0:
             user_file = os.path.join(MASCOTS_DIR[mascot], f"User{counters[mascot]}.txt")
             with open(user_file, "w") as f:
                 f.write(input_text)
 
         # Generate mascot response
-        mascot_file = os.path.join(MASCOTS_DIR[mascot], f"{mascot.capitalize()}{counters[mascot] + 1}.txt")
-        prompt = build_conversation_history(MASCOTS_DIR[mascot], mascot, counters[mascot] + 1)
+        current_response_number = counters[mascot] + 1
+        mascot_file = os.path.join(MASCOTS_DIR[mascot], f"{mascot.capitalize()}{current_response_number}.txt")
 
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a venture capitalist assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=150,
-            temperature=0.7
-        )
+        # Generate new response only if it's the initial response or user input is provided
+        if counters[mascot] == 0 or input_text:
+            prompt = build_conversation_history(MASCOTS_DIR[mascot], mascot, current_response_number)
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a venture capitalist assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=150,
+                temperature=0.7
+            )
 
-        gpt_response = response["choices"][0]["message"]["content"].strip()
-        
-        # Process emotion
-        allowed_emotions = ["Neutral", "Angry", "Surprised", "Happy", "Cool"]
-        if "---" in gpt_response:
-            message, emotion = gpt_response.rsplit("---", 1)
-            emotion = emotion.strip()
-            if emotion not in allowed_emotions:
+            gpt_response = response["choices"][0]["message"]["content"].strip()
+            
+            # Process emotion
+            allowed_emotions = ["Neutral", "Angry", "Surprised", "Happy", "Cool"]
+            if "---" in gpt_response:
+                message, emotion = gpt_response.rsplit("---", 1)
+                emotion = emotion.strip()
+                if emotion not in allowed_emotions:
+                    emotion = "Neutral"
+            else:
                 emotion = "Neutral"
-        else:
-            emotion = "Neutral"
-            message = gpt_response
+                message = gpt_response
 
-        final_response = f"{message.strip()} --- {emotion}"
-        with open(mascot_file, "w") as f:
-            f.write(final_response)
+            final_response = f"{message.strip()} --- {emotion}"
+            with open(mascot_file, "w") as f:
+                f.write(final_response)
 
-        # Increment counter after saving response
-        counters[mascot] += 1
+            # Increment counter after successful response generation
+            counters[mascot] += 1
         
-        # Lion gives 3 responses total (initial + 2 replies)
-        # User gives 2 responses
-        # Counter progression should be: 1 -> 2 -> 3
-        # At counter = 3, we've had: Lion1, User1, Lion2, User2, Lion3
-        is_complete = counters[mascot] >= 3
-
+        # Return response
         return jsonify({
             "message": message.strip(), 
             "mood": emotion,
             "turn": counters[mascot],
-            "isComplete": is_complete
+            "isComplete": counters[mascot] >= 3
         })
 
     except Exception as e:
@@ -256,4 +255,4 @@ if __name__ == '__main__':
     print("\n=== Starting Server ===")
     print(f"Business Pitch Directory: {BUSINESS_PITCH_DIR}")
     print(f"Mascot Directories: {MASCOTS_DIR}")
-    app.run(debug=True)
+    app.run(debug=True, port=5002)
