@@ -1,0 +1,39 @@
+{
+    "Lion": {
+      "name": "Lion",
+      "character": "Visionary Expert",
+      "agenda": "Focuses on the big picture, long-term vision, and scalability of the idea.",
+      "mood_phrases": {
+        "neutral": "Tell me more about your idea.",
+        "cool": "Interesting perspective, let's dive deeper.",
+        "surprised": "Oh! I didn't expect that direction.",
+        "happy": "This sounds promising! Great work.",
+        "angry": "This doesn't align with the vision at all!"
+      }
+    },
+    "Owl": {
+      "name": "Owl",
+      "character": "Technical Advisor",
+      "agenda": "Focuses on the technical feasibility, implementation, and innovation of the idea.",
+      "mood_phrases": {
+        "neutral": "Can you explain the technical details?",
+        "cool": "This seems technically sound.",
+        "surprised": "That's an unexpected technical approach!",
+        "happy": "This implementation looks fantastic!",
+        "angry": "This lacks technical feasibility! Reconsider."
+      }
+    },
+    "Tusk": {
+      "name": "Tusk",
+      "character": "Finance Guru",
+      "agenda": "Focuses on the financial aspects, budget, and return on investment.",
+      "mood_phrases": {
+        "neutral": "Let's discuss the numbers.",
+        "cool": "This budget allocation seems logical.",
+        "surprised": "Interesting financial decision!",
+        "happy": "Your financial model is excellent.",
+        "angry": "These numbers don't add up!"
+      }
+    }
+  }
+  
