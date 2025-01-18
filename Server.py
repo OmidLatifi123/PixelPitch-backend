@@ -1,123 +1,120 @@
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from dotenv import load_dotenv
+import openai
+import os
+import json
+import time
+from Initialize_db import initialize_session_data
+
+# Load environment variables from .env file
+load_dotenv(dotenv_path=os.path.join("instance", ".env"))
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-# Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quickpitch.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Set OpenAI API key from environment variables
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Initialize SQLAlchemy
-db = SQLAlchemy(app)
+# Initialize session data
+DB_PATH = initialize_session_data()
+MOODS_PATH = os.path.join("data", "mascot_moods.json")
 
-# Models
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # Role field to distinguish users
+# Load mascot personalities
+with open(MOODS_PATH, "r") as f:
+    mascot_moods = json.load(f)
 
-class Investor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    personality = db.Column(db.String(120), nullable=False)
-    preferences = db.Column(db.String(120), nullable=False)
+# Allowed emotions
+ALLOWED_EMOTIONS = ["neutral", "cool", "surprised", "happy", "angry"]
 
-class Pitch(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    investor_id = db.Column(db.Integer, db.ForeignKey('investor.id'), nullable=False)
+@app.route('/conversation', methods=['POST'])
+def conversation():
+    """Handles user input and responds with GPT-4."""
+    try:
+        data = request.json
+        mascot = data["mascot"].lower()
+        user_input = data["input"]
 
-class Decision(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    pitch_id = db.Column(db.Integer, db.ForeignKey('pitch.id'), nullable=False)
-    result = db.Column(db.String(80), nullable=False)
-    feedback = db.Column(db.Text, nullable=True)
+        # Load session data
+        with open(DB_PATH, "r") as f:
+            session_data = json.load(f)
 
-# Routes
-@app.route('/')
-def home():
-    return jsonify({"message": "Welcome to the QuickPitch Backend!"})
+        if mascot not in session_data:
+            return jsonify({"error": "Invalid mascot"}), 400
 
-# Register Route
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.json
-    role = data.get('role')
-    email = data.get('email')
-    username = data.get('username')
+        # Store the first message if it's not already stored
+        if "initial_message" not in session_data:
+            session_data["initial_message"] = user_input
 
-    if not email or not username or not role:
-        return jsonify({"error": "Invalid input. Please provide all required fields."}), 400
+        # Prepare conversation context with initial message
+        initial_message = session_data.get("initial_message", "No idea provided yet")
+        recent_messages = session_data[mascot]["messages"][-5:]  # Last 5 messages
+        prompt = f"""
+        You are {mascot_moods[mascot]["character"]}, focusing on {mascot_moods[mascot]["agenda"]}.
+        Always remember the initial idea: "{initial_message}".
+        Current conversation: {recent_messages}
+        User: {user_input}
+        Respond as {mascot_moods[mascot]["character"]}.
+        """
 
-    if role.lower() == "entrepreneur":
-        user = User(username=username, email=email, role="Entrepreneur")
-        db.session.add(user)
-    elif role.lower() == "investor":
-        investor = Investor(name=username, email=email, personality="default", preferences="default")
-        db.session.add(investor)
-    else:
-        return jsonify({"error": "Invalid role specified."}), 400
+        # GPT-4 API Call
+        gpt_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "system", "content": prompt}],
+        )
+        message = gpt_response["choices"][0]["message"]["content"]
 
-    db.session.commit()
-    return jsonify({"message": f"{role.capitalize()} registered successfully!"})
+        # Extract mood
+        mood = "neutral"  # Default mood
+        if "--" in message:
+            parts = message.split("--")
+            message = parts[0].strip()
+            extracted_mood = parts[1].strip().lower()
+            if extracted_mood in ALLOWED_EMOTIONS:
+                mood = extracted_mood
 
-# Login Route
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.json
-    email = data.get('email')
+        # Update session data
+        session_data[mascot]["messages"].append({"role": "user", "content": user_input})
+        session_data[mascot]["messages"].append({"role": "assistant", "content": message})
+        session_data[mascot]["mood"] = mood
+        session_data[mascot]["last_active"] = str(int(time.time()))  # Update timestamp
 
-    if not email:
-        return jsonify({"error": "Invalid input. Please provide an email."}), 400
+        # Save updated session data
+        with open(DB_PATH, "w") as f:
+            json.dump(session_data, f)
 
-    # Check if the email exists in the User table
-    user = User.query.filter_by(email=email).first()
-    if user:
-        return jsonify({"message": f"{user.role} logged in successfully!", "role": user.role})
+        return jsonify({"message": message, "mood": mood})
+    except Exception as e:
+        print(f"Error in /conversation: {e}")
+        return jsonify({"error": str(e)}), 500
 
-    # Check if the email exists in the Investor table
-    investor = Investor.query.filter_by(email=email).first()
-    if investor:
-        return jsonify({"message": "Investor logged in successfully!", "role": "Investor"})
+@app.route('/summary', methods=['POST'])
+def summary():
+    """Generates a summary of the pitch session."""
+    try:
+        # Load session data
+        with open(DB_PATH, "r") as f:
+            session_data = json.load(f)
 
-    return jsonify({"message": "Login failed. User not found."}), 404
+        # Generate summary
+        summary = "Final Summary:\n"
+        for mascot, data in session_data.items():
+            if mascot == "initial_message":
+                continue
+            last_message = data['messages'][-1]['content'] if data['messages'] else "No interaction"
+            summary += f"{mascot.capitalize()} ({data['mood']}): {last_message}\n"
 
-# Add a Pitch
-@app.route('/add_pitch', methods=['POST'])
-def add_pitch():
-    data = request.json
-    title = data.get('title')
-    description = data.get('description')
-    user_id = data.get('user_id')
-    investor_id = data.get('investor_id')
+        # Debugging: Log summary
+        print(f"Generated summary: {summary}")
 
-    if not title or not description or not user_id or not investor_id:
-        return jsonify({"error": "Invalid input. Please provide all required fields."}), 400
+        return jsonify({"summary": summary})
+    except Exception as e:
+        # Log and return the error
+        print(f"Error in /summary: {e}")
+        return jsonify({"error": str(e)}), 500
 
-    pitch = Pitch(title=title, description=description, user_id=user_id, investor_id=investor_id)
-    db.session.add(pitch)
-    db.session.commit()
-    return jsonify({"message": "Pitch added successfully!"})
-
-# List All Pitches
-@app.route('/pitches', methods=['GET'])
-def list_pitches():
-    pitches = Pitch.query.all()
-    output = []
-    for pitch in pitches:
-        output.append({
-            "id": pitch.id,
-            "title": pitch.title,
-            "description": pitch.description,
-            "user_id": pitch.user_id,
-            "investor_id": pitch.investor_id
-        })
-    return jsonify(output)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # Debugging: Verify API key
+    print("Loaded API Key:", openai.api_key if openai.api_key else "No API key found")
     app.run(debug=True)
