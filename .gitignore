@@ -1,1 +1,46 @@
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution/packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
 .env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+
+# Database files
+*.db
+*.sqlite3
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Local development settings
+instance/
+.webassets-cache
+
+# System files
+.DS_Store
+Thumbs.db
