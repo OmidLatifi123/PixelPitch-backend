@@ -14,11 +14,11 @@ def run_owl_server():
 def run_tusk_server():
     tusk_app.run(debug=True, port=5002, use_reloader=False)
 
-def run_summary_server():
-    summary_app.run(debug=True, port=5003, use_reloader=False)
-
 def run_auth_server():
     auth_app.run(debug=True,port=5003,use_reloader=False)
+
+def run_summary_server():
+    summary_app.run(debug=True, port=5004, use_reloader=False)
 
 def main():
     multiprocessing.freeze_support()
@@ -32,6 +32,7 @@ def main():
     owl_process = multiprocessing.Process(target=run_owl_server)
     tusk_process = multiprocessing.Process(target=run_tusk_server)
     summary_process = multiprocessing.Process(target=run_summary_server)
+    auth_process= multiprocessing.Process(target=run_auth_server)
     
     try:
         # Start all servers
@@ -45,12 +46,16 @@ def main():
         tusk_process.start()
 
         print("Starting auth server on port 5003...")
+        auth_process.start()
+
+        print("Starting auth server on port 5004...")
         summary_process.start()
         
         # Wait for all servers
         lion_process.join()
         owl_process.join()
         tusk_process.join()
+        auth_process.join()
         summary_process.join()
 
     except KeyboardInterrupt:
@@ -58,10 +63,12 @@ def main():
         lion_process.terminate()
         owl_process.terminate()
         tusk_process.terminate()
+        auth_process.terminate()
         summary_process.terminate()
         lion_process.join()
         owl_process.join()
         tusk_process.join()
+        auth_process.join()
         summary_process.join()
         print("Servers shut down successfully")
     
