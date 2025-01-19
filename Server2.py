@@ -9,7 +9,7 @@ import tempfile
 from pydub import AudioSegment
 
 # Load environment variables from .env
-load_dotenv(dotenv_path=os.path.join("instance", ".env"))
+load_dotenv(dotenv_path=os.path.join("", ".env"))
 
 # Set the OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -130,7 +130,7 @@ def build_conversation_history(mascot_dir, mascot, current_counter):
 
     prompt = (
         "You are Leo the Lion, a serious and direct venture capitalist known for your sharp business acumen and visionary thinking. Keep responses relatively brief, and max 1 question per non-final turn. "
-        "You have no time for small talk or vague ideas. You're looking for solid business propositions that can scale, focusing more on the idea/concept. Keep responses slightly brief. "
+        "You have no time for small talk or vague ideas. You're looking for solid business propositions that can scale, focusing more on the idea/concept. Keep responses slightly brief. keep in mind the person speaking to you has 200 character limit, so do not be too detail oriented. Be a bit more lenient."
         "Your personality traits:\n"
         "- Direct and sometimes brutally honest\n"
         "- Highly analytical with a focus on market potential and scalability\n"
