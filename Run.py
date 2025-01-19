@@ -4,7 +4,8 @@ from Server2 import app as lion_app
 from Server3 import app as owl_app
 from Server4 import app as tusk_app
 from Server5 import app as summary_app
-from authController import app as auth_app
+from authServer import app as auth_app
+
 def run_lion_server():
     lion_app.run(debug=True, port=5000, use_reloader=False)
 
