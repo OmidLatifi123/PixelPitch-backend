@@ -333,7 +333,164 @@ app.post('/advice', async (req, res) => {
 }
 );
 
+app.post('/api/tts', async (req, res) => {
+    try {
+        const { text } = req.body;
 
+        if (!text) {
+            return res.status(400).json({ 
+                error: "Text is required" 
+            });
+        }
+
+       const ELEVEN_LABS_API_KEY = process.env.ELEVENLABS_API_KEY
+        const VOICE_ID = "D38z5RcWu1voky8WS1ja" // owl sound
+
+        if (!ELEVEN_LABS_API_KEY || !VOICE_ID) {
+            return res.status(500).json({ 
+                error: "Missing API configuration" 
+            });
+        }
+
+        const response = await axios({
+            method: 'POST',
+            url: `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+            headers: {
+                'xi-api-key': ELEVEN_LABS_API_KEY,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                text,
+                voice_settings: {
+                    stability: 0.75,
+                    similarity_boost: 0.75
+                }
+            },
+            responseType: 'arraybuffer'
+        });
+
+        // Convert audio buffer to base64 and properly format it
+        const audioBase64 = Buffer.from(response.data).toString('base64');
+        
+        res.json({ 
+            audioContent: audioBase64,
+            format: 'audio/mpeg'  // or whatever format Eleven Labs returns
+        });
+
+    } catch (error) {
+        console.error('TTS Error:', error);
+        res.status(500).json({ 
+            error: "Failed to generate speech",
+            details: error.message 
+        });
+    }
+});
+
+app.post('/api/tts/Tusk', async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text) {
+            return res.status(400).json({ 
+                error: "Text is required" 
+            });
+        }
+
+       const ELEVEN_LABS_API_KEY = process.env.ELEVENLABS_API_KEY
+        const VOICE_ID = "pNInz6obpgDQGcFmaJgB"
+
+        if (!ELEVEN_LABS_API_KEY || !VOICE_ID) {
+            return res.status(500).json({ 
+                error: "Missing API configuration" 
+            });
+        }
+
+        const response = await axios({
+            method: 'POST',
+            url: `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+            headers: {
+                'xi-api-key': ELEVEN_LABS_API_KEY,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                text,
+                voice_settings: {
+                    stability: 0.75,
+                    similarity_boost: 0.75
+                }
+            },
+            responseType: 'arraybuffer'
+        });
+
+        // Convert audio buffer to base64 and properly format it
+        const audioBase64 = Buffer.from(response.data).toString('base64');
+        
+        res.json({ 
+            audioContent: audioBase64,
+            format: 'audio/mpeg'  // or whatever format Eleven Labs returns
+        });
+
+    } catch (error) {
+        console.error('TTS Error:', error);
+        res.status(500).json({ 
+            error: "Failed to generate speech",
+            details: error.message 
+        });
+    }
+});
+
+app.post('/api/tts/Lion', async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text) {
+            return res.status(400).json({ 
+                error: "Text is required" 
+            });
+        }
+
+       const ELEVEN_LABS_API_KEY = process.env.ELEVENLABS_API_KEY
+        const VOICE_ID = "pqHfZKP75CvOlQylNhV4"
+
+        if (!ELEVEN_LABS_API_KEY || !VOICE_ID) {
+            return res.status(500).json({ 
+                error: "Missing API configuration" 
+            });
+        }
+
+        const response = await axios({
+            method: 'POST',
+            url: `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+            headers: {
+                'xi-api-key': ELEVEN_LABS_API_KEY,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                text,
+                voice_settings: {
+                    stability: 0.75,
+                    similarity_boost: 0.75
+                }
+            },
+            responseType: 'arraybuffer'
+        });
+
+        // Convert audio buffer to base64 and properly format it
+        const audioBase64 = Buffer.from(response.data).toString('base64');
+        
+        res.json({ 
+            audioContent: audioBase64,
+            format: 'audio/mpeg'  // or whatever format Eleven Labs returns
+        });
+
+    } catch (error) {
+        console.error('TTS Error:', error);
+        res.status(500).json({ 
+            error: "Failed to generate speech",
+            details: error.message 
+        });
+    }
+});
 
 // Start the server
 const PORT = 3001;
