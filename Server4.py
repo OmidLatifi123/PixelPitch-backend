@@ -14,7 +14,10 @@ load_dotenv(dotenv_path=os.path.join("instance", ".env"))
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
-CORS(app)
+
+# Allow all origins with specific methods
+CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"], "allow_headers": "*"}})
+
 
 # Directories
 BASE_DIR = "backend"
@@ -118,7 +121,7 @@ def build_conversation_history(mascot_dir, mascot, current_counter, business_pit
     # Tusk’s personality prompt
     prompt = (
         "You are Mr. Tusk, a venture capitalist focused on financial analysis and market strategy. Keep responses relatively brief, and max 1 question per non-final turn. "
-        "You value detailed financial insights, profitability, and long-term market viability. Keep responses brief, keep in mind the person speaking to you has 200 character limit, so do not be too detail oriented. Be a bit more lenient."
+        "You value detailed financial insights, profitability, and long-term market viability. "
         "Your traits:\n"
         "- Direct and strategic\n"
         "- Interested in numbers, ROI, and market scalability\n"
@@ -274,30 +277,53 @@ def process_match():
     Combines data, sends it to OpenAI, and updates matches_db.json with the match information.
     """
     try:
+        print("=== processMatch Endpoint Called ===")
+
         # Paths
         business_pitch_path = os.path.join(BASE_DIR, "BusinessPitch", "BusinessPitch.txt")
         investor_info_path = os.path.join(BASE_DIR, "investorInfo", "investor_preferences.json")
         match_db_path = os.path.join(BASE_DIR, "matches_db.json")
+        print(f"Paths:\n Business Pitch Path: {business_pitch_path}\n Investor Info Path: {investor_info_path}\n Match DB Path: {match_db_path}")
+
+        # Parse JSON payload
+        data = request.json
+        print(f"Request Payload: {data}")
+
+        if not data or "companyName" not in data:
+            print("Error: 'companyName' missing in payload")
+            return jsonify({"error": "'companyName' is required"}), 400
+
+        company_name = data.get("companyName")
+        user_email = data.get("userEmail")
+        print(f"Company Name: {company_name}")
+        print(f"User Email: ", user_email)
 
         # Read Business Pitch
         if not os.path.exists(business_pitch_path):
+            print("Error: Business pitch file not found.")
             return jsonify({"error": "Business pitch file not found."}), 404
 
         with open(business_pitch_path, "r") as f:
             business_pitch = f.read().strip()
+        print(f"Business Pitch: {business_pitch[:100]}...")  # Truncate for readability
 
         # Read Investor Preferences
         if not os.path.exists(investor_info_path):
+            print("Error: Investor preferences file not found.")
             return jsonify({"error": "Investor preferences file not found."}), 404
 
         with open(investor_info_path, "r") as f:
             investor_preferences = json.load(f)
+        print(f"Investor Preferences: {json.dumps(investor_preferences, indent=2)}")
 
-        # Read User Texts from Each Directory
+        # Read Mascot Responses
         mascots_data = {}
         for mascot in ["Lion", "Owl", "Tusk"]:
             mascot_dir = os.path.join(BASE_DIR, mascot)
+            print(f"Checking Mascot Directory: {mascot_dir}")
+
             if not os.path.exists(mascot_dir):
+                print(f"Warning: Directory for {mascot} not found. Skipping.")
                 continue
 
             mascot_texts = []
@@ -306,101 +332,157 @@ def process_match():
                     file_path = os.path.join(mascot_dir, filename)
                     with open(file_path, "r") as f:
                         mascot_texts.append(f.read().strip())
-
             mascots_data[mascot] = mascot_texts
+            print(f"{mascot} Data: {mascot_texts}")
 
-        # Combine data for OpenAI prompt
+        # Build Prompt
         prompt = f"""
-You are an AI assistant. Given the following data, generate a match entry for a JSON database. 
-Each entry includes companyName, description, matchScore, stage, seeking, industry, and feedback from four AI animal advisors (Leo, Professor Owl, Rocket, and Mr. Tusk).
+        Business Pitch:
+        {business_pitch}
 
-Business Pitch:
-{business_pitch}
+        Investor Preferences:
+        {json.dumps(investor_preferences, indent=2)}
 
-Investor Preferences:
-{json.dumps(investor_preferences, indent=2)}
 
-Mascot Responses:
-{json.dumps(mascots_data, indent=2)}
+        You have this data. remmember to only generate (potentially) accurate points, limit points to 2 per strength/weaknesses. Reference actual Pitch and comments by Leo the Lion (visionary), Mr. Tusk (finance guru), and Professor Hoot Return a valid JSON to see the match for this company:
 
-Provide feedback from:
-- Leo (market & growth-focused)
-- Professor Owl (technical & scalability expert)
-- Rocket (financial & growth metrics expert)
-- Mr. Tusk (strategy & ROI expert)
+        companyName: {company_name}
 
-Ensure the feedback includes:
-- Score
-- Positives (at least 3 points)
-- Concerns (at least 1 point)
+        companyEmail: {user_email}
 
-Output the match in this JSON format:
-{{
-  "companyName": "Example Company",
-  "description": "Example description",
-  "matchScore": 90,
-  "stage": "Seed",
-  "seeking": "$500K",
-  "industry": "AI/ML",
-  "animalFeedback": {{
-    "leo": {{
-      "score": 85,
-      "positives": ["..."],
-      "concerns": ["..."]
-    }},
-    "professorOwl": {{
-      "score": 90,
-      "positives": ["..."],
-      "concerns": ["..."]
-    }},
-    "rocket": {{
-      "score": 88,
-      "positives": ["..."],
-      "concerns": ["..."]
-    }},
-    "mrTusk": {{
-      "score": 92,
-      "positives": ["..."],
-      "concerns": ["..."]
-    }}
-  }}
-}}
-"""
+        Remember to return only the JSON in the following form don't forget company name and email"
+        {{
+            "id": 1,
+            "companyName": "TechFlow AI",
+            "companyEmail":"companyeemail@email.com",
+            "description": "AI-powered workflow automation platform",
+            "matchScore": 92,
+            "stage": "Seed",
+            "seeking": "$500K",
+            "industry": "AI/ML",
+            "animalFeedback": {{
+                "leo": {{
+                    "score": 95,
+                    "positives": [
+                        "Strong founder with previous exits",
+                        "Clear vision for market disruption",
+                        "Well-defined growth strategy"
+                    ],
+                    "concerns": ["Competitive market space"]
+                }},
+                "Professor Hoot": {{
+                    "score": 90,
+                    "positives": [
+                        "Sophisticated ML architecture",
+                        "Scalable cloud infrastructure",
+                        "Strong technical team"
+                    ],
+                    "concerns": ["Need for ongoing ML training resources"]
+                }},
+                "summary": {{
+                    "score": 88,
+                    "positives": [
+                        "45% MoM growth",
+                        "Strong unit economics",
+                        "Clear acquisition strategy"
+                    ],
+                    "concerns": ["CAC could be optimized"]
+                }},
+                "Mr. Tusk": {{
+                    "score": 94,
+                    "positives": [
+                        "$5B TAM",
+                        "Clear competitive advantage",
+                        "Strong market positioning"
+                    ],
+                    "concerns": ["Market education needed"]
+                }}
+            }}
+        }}
+        """
+        
+        try:
+            print("Sending data to OpenAI API...")
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": prompt}],
+                max_tokens=800,
+                temperature=0.7
+            )
 
-        # Send data to OpenAI
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1000,
-            temperature=0.7
-        )
+            # Parse OpenAI Response
+            gpt_response = response["choices"][0]["message"]["content"]
+            print(f"OpenAI Response: {gpt_response}")
 
-        # Parse OpenAI response
-        match_entry = json.loads(response["choices"][0]["message"]["content"])
+            # Validate JSON response
+            try:
+                match_entry = json.loads(gpt_response)
+            except json.JSONDecodeError as e:
+                print(f"JSON Decoding Error: {str(e)} - Response was: {gpt_response}")
+                return jsonify({"error": "Invalid JSON format in OpenAI response"}), 500
 
-        # Add match entry to matches_db.json
-        if not os.path.exists(match_db_path):
+            # Update matches_db.json
+            if not os.path.exists(match_db_path):
+                print("Match DB file not found. Creating a new one.")
+                with open(match_db_path, "w") as f:
+                    json.dump([], f, indent=4)
+
+            with open(match_db_path, "r") as f:
+                matches_db = json.load(f)
+
+            match_entry["id"] = len(matches_db) + 1
+            matches_db.append(match_entry)
+
             with open(match_db_path, "w") as f:
-                json.dump([], f, indent=4)
+                json.dump(matches_db, f, indent=4)
+            print("Match added to matches_db.json successfully.")
 
-        with open(match_db_path, "r") as f:
-            matches_db = json.load(f)
+            return jsonify({"message": "Match entry added successfully!", "entry": match_entry}), 200
 
-        # Assign an ID to the new match
-        match_entry["id"] = len(matches_db) + 1
-        matches_db.append(match_entry)
-
-        with open(match_db_path, "w") as f:
-            json.dump(matches_db, f, indent=4)
-
-        return jsonify({"message": "Match entry added successfully!", "entry": match_entry}), 200
+        except Exception as e:
+            print(f"Error processing OpenAI API response: {str(e)}")
+            return jsonify({"error": str(e)}), 500
 
     except Exception as e:
+        print(f"Error in processMatch: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/getMatches", methods=["GET"])
+def get_matches():
+    """
+    Endpoint to retrieve all matches from the matches_db.json file.
+    """
+    try:
+        match_db_path = os.path.join(BASE_DIR, "matches_db.json")
+        
+        # Check if file exists
+        if not os.path.exists(match_db_path):
+            return jsonify({
+                "error": "Matches database not found",
+                "matches": []
+            }), 404
+            
+        # Read and return the JSON file
+        with open(match_db_path, "r") as f:
+            matches_db = json.load(f)
+            
+        return jsonify({
+            "message": "Matches retrieved successfully",
+            "matches": matches_db
+        }), 200
+            
+    except json.JSONDecodeError as e:
+        return jsonify({
+            "error": f"Invalid JSON format in database: {str(e)}",
+            "matches": []
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "error": f"Error retrieving matches: {str(e)}",
+            "matches": []
+        }), 500
+    
 if __name__ == "__main__":
     print("\n=== Starting Tusk Server ===")
     print(f"Business Pitch Directory: {BUSINESS_PITCH_DIR}")

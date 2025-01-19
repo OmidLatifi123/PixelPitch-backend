@@ -1,0 +1,318 @@
+[
+    {
+        "id": 2,
+        "companyName": "Georgian College",
+        "description": "Educational institution offering a variety of programs",
+        "matchScore": 45,
+        "stage": "Series A",
+        "seeking": "$30000",
+        "industry": "Education",
+        "animalFeedback": {
+            "leo": {
+                "score": 50,
+                "positives": [
+                    "Experienced management team",
+                    "Strong brand recognition"
+                ],
+                "concerns": [
+                    "Uncertain market conditions due to pandemic"
+                ]
+            },
+            "owlbert": {
+                "score": 40,
+                "positives": [
+                    "Diverse range of programs",
+                    "Strong technical infrastructure"
+                ],
+                "concerns": [
+                    "Potential for disruption by online learning platforms"
+                ]
+            },
+            "rocket": {
+                "score": 45,
+                "positives": [
+                    "Steady growth in student enrollment",
+                    "Community involvement and partnerships"
+                ],
+                "concerns": [
+                    "Dependency on government funding"
+                ]
+            },
+            "elephant": {
+                "score": 45,
+                "positives": [
+                    "Established institution with a strong reputation",
+                    "Strategic location"
+                ],
+                "concerns": [
+                    "Competition from other institutions"
+                ]
+            }
+        }
+    },
+    {
+        "id": 3,
+        "companyName": "Wagon",
+        "description": "A mobile-first consumer app providing an innovative solution in the fintech industry",
+        "matchScore": 90,
+        "stage": "Series A",
+        "seeking": "$50000",
+        "industry": "Fintech",
+        "animalFeedback": {
+            "leo": {
+                "score": 92,
+                "positives": [
+                    "Strong founder with previous exits",
+                    "Clear vision for market disruption",
+                    "Well-defined growth strategy"
+                ],
+                "concerns": [
+                    "Competitive market space"
+                ]
+            },
+            "owlbert": {
+                "score": 89,
+                "positives": [
+                    "Sophisticated IoT architecture",
+                    "Scalable mobile infrastructure",
+                    "Strong technical team"
+                ],
+                "concerns": [
+                    "Need for ongoing IoT training resources"
+                ]
+            },
+            "rocket": {
+                "score": 91,
+                "positives": [
+                    "45% MoM user growth",
+                    "Strong unit economics",
+                    "Clear acquisition strategy"
+                ],
+                "concerns": [
+                    "CAC could be optimized"
+                ]
+            },
+            "elephant": {
+                "score": 93,
+                "positives": [
+                    "Large market potential in fintech",
+                    "Clear competitive advantage",
+                    "Strong market positioning"
+                ],
+                "concerns": [
+                    "Market education needed"
+                ]
+            }
+        }
+    },
+    {
+        "id": 4,
+        "companyName": "MiraNariff Lawn Mowers",
+        "description": "Intelligent lawn mowing solution powered by IoT",
+        "matchScore": 85,
+        "stage": "Series A",
+        "seeking": "$45000",
+        "industry": "Consumer Apps, Hardware",
+        "animalFeedback": {
+            "leo": {
+                "score": 85,
+                "positives": [
+                    "Founder has prior successful exits",
+                    "Clear vision for disrupting traditional lawn maintenance",
+                    "Consistent user growth"
+                ],
+                "concerns": [
+                    "Highly competitive market"
+                ]
+            },
+            "Professor Hoot": {
+                "score": 82,
+                "positives": [
+                    "Innovative IoT application",
+                    "Scalable hardware model",
+                    "Mobile-first approach"
+                ],
+                "concerns": [
+                    "Dependent on developer tools"
+                ]
+            },
+            "summary": {
+                "score": 85,
+                "positives": [
+                    "35% MoM user growth",
+                    "Strong unit economics",
+                    "Clear market acquisition strategy"
+                ],
+                "concerns": [
+                    "CAC could be optimized"
+                ]
+            },
+            "Mr. Tusk": {
+                "score": 88,
+                "positives": [
+                    "Large TAM",
+                    "Defined competitive advantage",
+                    "Strong market positioning"
+                ],
+                "concerns": [
+                    "Potential market education needed"
+                ]
+            }
+        }
+    },
+    {
+        "id": 5,
+        "companyName": "GreenCuts",
+        "description": "High tech IoT-enabled lawn mower",
+        "matchScore": 75,
+        "stage": "Series A",
+        "seeking": "$30K",
+        "industry": "Hardware",
+        "animalFeedback": {
+            "leo": {
+                "score": 70,
+                "positives": [
+                    "Innovative IoT use",
+                    "Potential for market disruption"
+                ],
+                "concerns": [
+                    "Competitive market space"
+                ]
+            },
+            "Professor Hoot": {
+                "score": 80,
+                "positives": [
+                    "Scalable IoT infrastructure",
+                    "Strong hardware team"
+                ],
+                "concerns": [
+                    "Technical challenges in IoT"
+                ]
+            },
+            "summary": {
+                "score": 75,
+                "positives": [
+                    "20% MoM growth",
+                    "Potential for great unit economics"
+                ],
+                "concerns": [
+                    "CAC could be optimized"
+                ]
+            },
+            "Mr. Tusk": {
+                "score": 72,
+                "positives": [
+                    "Large TAM",
+                    "Clear competitive advantage"
+                ],
+                "concerns": [
+                    "Market education needed"
+                ]
+            }
+        }
+    },
+    {
+        "id": 6,
+        "companyName": "White Grass",
+        "description": "Innovative lawn mower business",
+        "matchScore": 89,
+        "stage": "Series A",
+        "seeking": "$30K",
+        "industry": "Hardware",
+        "animalFeedback": {
+            "leo": {
+                "score": 90,
+                "positives": [
+                    "Recognizable potential in the IoT industry",
+                    "Strong vision for consumer hardware market disruption"
+                ],
+                "concerns": [
+                    "Lack of previous exits"
+                ]
+            },
+            "Professor Hoot": {
+                "score": 85,
+                "positives": [
+                    "Sophisticated hardware architecture",
+                    "Potential for scalability with mobile first approach"
+                ],
+                "concerns": [
+                    "Need for further technical team"
+                ]
+            },
+            "summary": {
+                "score": 88,
+                "positives": [
+                    "Potential for user growth in consumer hardware sector",
+                    "Clear product strategy"
+                ],
+                "concerns": [
+                    "Market education needed",
+                    "CAC could be optimized"
+                ]
+            },
+            "Mr. Tusk": {
+                "score": 93,
+                "positives": [
+                    "Clear potential in consumer hardware market",
+                    "Strong market positioning"
+                ],
+                "concerns": [
+                    "Financing needs for hardware production"
+                ]
+            }
+        }
+    },
+    {
+        "id": 7,
+        "companyName": "White Grass",
+        "companyEmail": "hello@miran.com",
+        "description": "Innovative Lawn Mower solutions",
+        "matchScore": 85,
+        "stage": "Series A",
+        "seeking": "$40000",
+        "industry": "Consumer Apps, Hardware",
+        "animalFeedback": {
+            "leo": {
+                "score": 87,
+                "positives": [
+                    "Strong potential for market disruption",
+                    "Impressive growth strategy"
+                ],
+                "concerns": [
+                    "Competitive market space"
+                ]
+            },
+            "Professor Hoot": {
+                "score": 84,
+                "positives": [
+                    "Potential of IoT integration",
+                    "Mobile-first approach"
+                ],
+                "concerns": [
+                    "Need for ongoing product development"
+                ]
+            },
+            "summary": {
+                "score": 83,
+                "positives": [
+                    "Strong user growth",
+                    "Good market potential"
+                ],
+                "concerns": [
+                    "CAC could be optimized"
+                ]
+            },
+            "Mr. Tusk": {
+                "score": 86,
+                "positives": [
+                    "$5B TAM",
+                    "Potential in fintech and consumer apps"
+                ],
+                "concerns": [
+                    "Market education needed"
+                ]
+            }
+        }
+    }
+]
